@@ -94,10 +94,10 @@ export const StudentHome: React.FC<StudentHomeProps> = ({
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (
-          item.name.toLowerCase().includes(q) ||
-          item.description.toLowerCase().includes(q) ||
-          item.category.toLowerCase().includes(q) ||
-          item.ingredients.some((ing) => ing.toLowerCase().includes(q))
+          (item.name || '').toLowerCase().includes(q) ||
+          (item.description || '').toLowerCase().includes(q) ||
+          (item.category || '').toLowerCase().includes(q) ||
+          (item.ingredients || []).some((ing) => ing.toLowerCase().includes(q))
         );
       }
       return true;
@@ -209,7 +209,7 @@ export const StudentHome: React.FC<StudentHomeProps> = ({
         </div>
 
         {/* Membership Callout */}
-        {currentUser.hasActiveMembership && (
+        {currentUser?.hasActiveMembership && (
           <div className="mt-4 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
@@ -225,7 +225,7 @@ export const StudentHome: React.FC<StudentHomeProps> = ({
               </div>
             </div>
             <span className="text-slate-400 text-[11px] font-mono">
-              Total Saved: ₹{currentUser.membershipSavingsPaise / 100}
+              Total Saved: ₹{(currentUser.membershipSavingsPaise || 0) / 100}
             </span>
           </div>
         )}
@@ -247,7 +247,7 @@ export const StudentHome: React.FC<StudentHomeProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {groupDeals.map((deal) => {
-            const hasJoined = deal.participantIds.includes(currentUser.id);
+            const hasJoined = (deal.participantIds || []).includes(currentUser?.id || '');
             const isUnlocked = deal.status === 'UNLOCKED';
             const progressPercent = Math.min(100, (deal.currentParticipants / deal.targetParticipants) * 100);
 

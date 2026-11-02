@@ -178,13 +178,20 @@ export default function App() {
         setAuthError(err.message);
       });
 
-    // Listen to Firebase auth changes
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setFirebaseUser(user);
-      if (user) {
-        await handleSyncFirebaseUser(user);
+    // Listen to Firebase auth changes if auth is initialized
+    let unsubscribe = () => {};
+    if (auth) {
+      try {
+        unsubscribe = onAuthStateChanged(auth, async (user) => {
+          setFirebaseUser(user);
+          if (user) {
+            await handleSyncFirebaseUser(user);
+          }
+        });
+      } catch (authErr) {
+        console.warn('Auth listener registration note:', authErr);
       }
-    });
+    }
 
     return () => unsubscribe();
   }, [refreshBackendData, handleSyncFirebaseUser]);

@@ -15,22 +15,43 @@ import {
   getDocFromServer,
   Firestore,
 } from 'firebase/firestore';
-import firebaseConfig from '../../firebase-applet-config.json';
+import rawConfig from '../../firebase-applet-config.json';
+
+const firebaseConfig = rawConfig as any;
+
+// Resilient initialization: Never crash module loading if keys/network/environment are incomplete
+let appInstance: any = null;
+let firestoreInstance: any = null;
+let authInstance: any = null;
+
+try {
+  if (firebaseConfig && (firebaseConfig.projectId || firebaseConfig.apiKey)) {
+    appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    if (firebaseConfig.firestoreDatabaseId) {
+      firestoreInstance = getFirestore(appInstance, firebaseConfig.firestoreDatabaseId);
+    } else {
+      firestoreInstance = getFirestore(appInstance);
+    }
+    authInstance = getAuth(appInstance);
+  }
+} catch (initErr) {
+  console.warn('[MealLoop] Firebase client initialization fallback:', initErr);
+}
 
 // Initialize Firebase App instance singleton
-export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-
-// CRITICAL: Must pass firestoreDatabaseId for custom/regional firestore instances
-export const db: Firestore = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-
-// Initialize Firebase Auth
-export const auth = getAuth(app);
+export const app = appInstance;
+export const db: Firestore = firestoreInstance;
+export const auth = authInstance;
 
 // Configure Google Provider
 export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({
-  prompt: 'select_account',
-});
+try {
+  googleProvider.setCustomParameters({
+    prompt: 'select_account',
+  });
+} catch {
+  // Ignore in environments without DOM
+}
 
 // Firestore Error Diagnostic Handler
 export enum OperationType {
@@ -63,13 +84,13 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+      emailVerified: auth?.currentUser?.emailVerified,
+      isAnonymous: auth?.currentUser?.isAnonymous,
+      tenantId: auth?.currentUser?.tenantId,
       providerInfo:
-        auth.currentUser?.providerData?.map((p) => ({
+        auth?.currentUser?.providerData?.map((p: any) => ({
           providerId: p.providerId,
           email: p.email,
         })) || [],
@@ -83,6 +104,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 // Startup connection probe
 export async function testFirestoreConnection() {
+  if (!db) return;
   try {
     await getDocFromServer(doc(db, '_connection_check', 'ping'));
   } catch (error) {
@@ -94,6 +116,9 @@ export async function testFirestoreConnection() {
 
 // Google Sign-In with popup + graceful redirect fallback
 export async function signInWithGoogle(): Promise<FirebaseUser | null> {
+  if (!auth) {
+    throw new Error('Firebase Authentication is not configured or available.');
+  }
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
@@ -118,6 +143,7 @@ export async function signInWithGoogle(): Promise<FirebaseUser | null> {
 }
 
 export async function checkRedirectLoginResult(): Promise<FirebaseUser | null> {
+  if (!auth) return null;
   try {
     const result = await getRedirectResult(auth);
     if (result && result.user) {
@@ -131,10 +157,12 @@ export async function checkRedirectLoginResult(): Promise<FirebaseUser | null> {
 }
 
 export async function logOut(): Promise<void> {
+  if (!auth) return;
   await signOut(auth);
 }
 
 export async function getCurrentUserIdToken(): Promise<string | null> {
+  if (!auth) return null;
   const user = auth.currentUser;
   if (!user) return null;
   return await user.getIdToken(false);

@@ -1,10 +1,10 @@
-import express, { Request, Response } from 'express';
+import express, { type Request, type Response } from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import crypto from 'crypto';
 import QRCode from 'qrcode';
-import { getApps, initializeApp, App } from 'firebase-admin/app';
+import { getApps, initializeApp, type App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import {
   DEMO_USERS,
@@ -20,7 +20,7 @@ import {
   INITIAL_METRICS,
   INITIAL_AUDIT_LOGS,
 } from './src/data/mockData.ts';
-import {
+import type {
   User,
   FoodItem,
   GroupDeal,
@@ -1588,19 +1588,41 @@ app.get('/api/audit-logs', (_req: Request, res: Response) => {
 async function startServer() {
   const isProduction = process.env.NODE_ENV === 'production';
 
-  if (!isProduction) {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
+  // Resolve dist directory robustly across tsx, node, and container environments
+  const candidateDistPaths = [
+    path.resolve(__dirname, 'dist'),
+    path.resolve(process.cwd(), 'dist'),
+    path.resolve(__dirname, '../dist'),
+  ];
+  const distPath = candidateDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html'))) || candidateDistPaths[0];
+  const hasBuiltDist = fs.existsSync(path.join(distPath, 'index.html'));
+
+  if (isProduction && hasBuiltDist) {
+    console.log(`[MealLoop Server] Serving production static bundle from: ${distPath}`);
+    app.use(express.static(distPath, { index: false }));
+    app.get('*', (req: Request, res: Response) => {
+      // Guard: Never return HTML for API routes that 404
+      if (req.path.startsWith('/api')) {
+        return res.status(404).json({ success: false, error: `API route ${req.method} ${req.path} not found` });
+      }
+      res.sendFile(path.join(distPath, 'index.html'));
     });
-    app.use(vite.middlewares);
   } else {
-    const distPath = path.resolve(__dirname, 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (_req: Request, res: Response) => {
-      res.sendFile(path.resolve(distPath, 'index.html'));
-    });
+    console.log(`[MealLoop Server] Initializing dynamic Vite middleware (production=${isProduction}, hasBuiltDist=${hasBuiltDist})...`);
+    try {
+      const { createServer: createViteServer } = await import('vite');
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } catch (viteErr) {
+      console.warn('[MealLoop Server] Vite middleware warning:', viteErr);
+      if (hasBuiltDist) {
+        app.use(express.static(distPath));
+        app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+      }
+    }
   }
 
   app.listen(PORT, '0.0.0.0', () => {

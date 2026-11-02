@@ -1,4 +1,4 @@
-import {
+import type {
   User,
   Canteen,
   FoodItem,
@@ -11,7 +11,7 @@ import {
   Order,
   AuditLog,
   PlatformMetrics,
-} from '../types';
+} from '../types.ts';
 
 export const DEMO_USERS: Record<string, User> = {
   student: {
