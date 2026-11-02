@@ -1,0 +1,11 @@
+# PostgreSQL Containerfile with default MealLoop configuration
+FROM postgres:16-alpine
+
+ENV POSTGRES_DB=mealloop \
+    POSTGRES_USER=mealloop \
+    POSTGRES_PASSWORD=mealloop_dev_password
+
+EXPOSE 5432
+
+HEALTHCHECK --interval=5s --timeout=5s --retries=5 \
+    CMD pg_isready -U mealloop -d mealloop || exit 1

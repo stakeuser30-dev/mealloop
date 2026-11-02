@@ -1,0 +1,6 @@
+{
+  "name": "MealLoop — Campus Food Ordering & Student Pickup",
+  "description": "Campus food-ordering platform for central canteens. Student pickup with single-use QR verification, progressive rescue meals, AI meal assistant, group deals, and NGO food recovery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

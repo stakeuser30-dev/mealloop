@@ -1,0 +1,543 @@
+import {
+  User,
+  Canteen,
+  FoodItem,
+  GroupDeal,
+  RescueMealBatch,
+  DonationOffer,
+  Coupon,
+  CampusEventOffer,
+  PartyPreorder,
+  Order,
+  AuditLog,
+  PlatformMetrics,
+} from '../types';
+
+export const DEMO_USERS: Record<string, User> = {
+  student: {
+    id: 'usr-student-1',
+    name: 'Aarav Sharma',
+    email: 'aarav.sharma@campus.edu',
+    role: 'STUDENT',
+    studentId: 'CS-2024-042',
+    hostel: 'Hostel 4 (Kaveri), Room 312',
+    hasActiveMembership: true,
+    membershipExpiry: '2026-11-28T23:59:59Z',
+    membershipSavingsPaise: 42000, // ₹420 saved
+    referralCode: 'AARAV42',
+    referralCreditsPaise: 10000, // ₹100 referral wallet
+    phone: '+91 98765 43210',
+  },
+  staff: {
+    id: 'usr-staff-1',
+    name: 'Chef Rajesh Kumar',
+    email: 'rajesh.canteen@campus.edu',
+    role: 'CANTEEN_STAFF',
+    canteenId: 'canteen-central-1',
+    hasActiveMembership: false,
+    membershipSavingsPaise: 0,
+    referralCode: 'STAFFRAJ',
+    referralCreditsPaise: 0,
+    phone: '+91 98450 11223',
+  },
+  admin: {
+    id: 'usr-admin-1',
+    name: 'Dr. Priya Nair',
+    email: 'priya.dean@campus.edu',
+    role: 'ADMIN',
+    hasActiveMembership: false,
+    membershipSavingsPaise: 0,
+    referralCode: 'CAMPUSDEAN',
+    referralCreditsPaise: 0,
+    phone: '+91 94480 99887',
+  },
+  ngo: {
+    id: 'usr-ngo-1',
+    name: 'Ananya Roy',
+    email: 'ananya@robinhoodarmy.org',
+    role: 'NGO',
+    organizationName: 'Robin Hood Army (Campus Chapter)',
+    hasActiveMembership: false,
+    membershipSavingsPaise: 0,
+    referralCode: 'RHAHERO',
+    referralCreditsPaise: 0,
+    phone: '+91 99001 88776',
+  },
+};
+
+export const CAMPUS_CANTEEN: Canteen = {
+  id: 'canteen-central-1',
+  name: 'Central Campus Food Court',
+  campus: 'Indian Institute of Technology & NIT Campus',
+  locationDesc: 'Ground Floor, Student Activity Centre (Next to Central Library)',
+  openingHours: '08:00 AM – 10:30 PM (Mon–Sun)',
+  pickupSlots: [
+    '12:30 PM – 12:45 PM',
+    '12:45 PM – 01:00 PM',
+    '01:00 PM – 01:15 PM',
+    '01:15 PM – 01:30 PM',
+    '01:30 PM – 01:45 PM',
+    '01:45 PM – 02:00 PM',
+    '02:00 PM – 02:15 PM',
+    '02:15 PM – 02:30 PM',
+  ],
+  contactNumber: '+91 80 2345 6789 (Ext. 402)',
+  isOpen: true,
+};
+
+export const INITIAL_FOOD_ITEMS: FoodItem[] = [
+  {
+    id: 'food-1',
+    canteenId: 'canteen-central-1',
+    name: 'Student Mini Veg Thali',
+    category: 'Thalis & Meals',
+    pricePaise: 5500, // ₹55
+    isVeg: true,
+    description: 'Fresh warm Phulkas (2 pcs), Dal Tadka, Seasonal Subzi, Steamed Rice, Salad, and Pickle. Balanced campus favorite.',
+    ingredients: ['Whole Wheat Flour', 'Toor Dal', 'Seasonal Vegetables', 'Basmati Rice', 'Cold-pressed Mustard Oil', 'Spices'],
+    allergens: ['Gluten (Wheat)'],
+    stockAvailable: 38,
+    imageEmoji: '🍱',
+    prepTimeMins: 8,
+    isFeatured: true,
+    customisations: [
+      {
+        title: 'Rice Upgrade',
+        required: false,
+        options: [
+          { name: 'Plain Steamed Rice', pricePaise: 0 },
+          { name: 'Jeera Rice (+₹10)', pricePaise: 1000 },
+        ],
+      },
+      {
+        title: 'Add Drink',
+        required: false,
+        options: [
+          { name: 'Chilled Spiced Buttermilk (+₹15)', pricePaise: 1500 },
+          { name: 'None', pricePaise: 0 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'food-2',
+    canteenId: 'canteen-central-1',
+    name: 'Benne Ghee Masala Dosa',
+    category: 'Breakfast & South',
+    pricePaise: 4500, // ₹45
+    isVeg: true,
+    description: 'Crisp fermented crepe roasted with pure desi ghee, filled with spiced potato palya, served with coconut chutney & Udupi sambar.',
+    ingredients: ['Fermented Rice & Urad Dal Batter', 'Potatoes', 'Mustard Seeds', 'Curry Leaves', 'Desi Ghee', 'Coconut'],
+    allergens: ['Dairy (Desi Ghee)'],
+    stockAvailable: 25,
+    imageEmoji: '🥞',
+    prepTimeMins: 5,
+    isFeatured: true,
+  },
+  {
+    id: 'food-3',
+    canteenId: 'canteen-central-1',
+    name: 'Rajma Chawal Comfort Bowl',
+    category: 'Thalis & Meals',
+    pricePaise: 4800, // ₹48
+    isVeg: true,
+    description: 'Slow-cooked Jammu red kidney beans in fragrant tomato-ginger gravy served over fluffy long-grain steamed rice with mint onions.',
+    ingredients: ['Jammu Rajma', 'Tomatoes', 'Ginger-Garlic', 'Basmati Rice', 'Garam Masala'],
+    allergens: [],
+    stockAvailable: 28,
+    imageEmoji: '🍛',
+    prepTimeMins: 6,
+    isFeatured: true,
+  },
+  {
+    id: 'food-4',
+    canteenId: 'canteen-central-1',
+    name: 'Amritsari Chole Bhature (2 Pcs)',
+    category: 'Thalis & Meals',
+    pricePaise: 5000, // ₹50
+    isVeg: true,
+    description: 'Dark spiced chickpea curry garnished with pickled chillies, served with two hot balloon bhaturas and sliced onions.',
+    ingredients: ['Kabuli Chana', 'Anardana', 'Refined Flour', 'Spices', 'Yogurt'],
+    allergens: ['Gluten (Wheat/Maida)', 'Dairy'],
+    stockAvailable: 20,
+    imageEmoji: '🫓',
+    prepTimeMins: 8,
+  },
+  {
+    id: 'food-5',
+    canteenId: 'canteen-central-1',
+    name: 'Double Egg Masala Bhurji with Pav',
+    category: 'Quick Bites',
+    pricePaise: 4500, // ₹45
+    isVeg: false,
+    description: 'Scrambled farm eggs sautéed with onions, green chillies, and coriander, served with 2 buttery toasted ladi pavs.',
+    ingredients: ['Farm Fresh Eggs', 'Onions', 'Green Chillies', 'Butter', 'Pav Bread'],
+    allergens: ['Egg', 'Gluten', 'Dairy'],
+    stockAvailable: 30,
+    imageEmoji: '🍳',
+    prepTimeMins: 7,
+  },
+  {
+    id: 'food-6',
+    canteenId: 'canteen-central-1',
+    name: 'Paneer Makhani Biryani Bowl',
+    category: 'Thalis & Meals',
+    pricePaise: 8500, // ₹85
+    isVeg: true,
+    description: 'Marinated cottage cheese cubes in rich cashew-tomato gravy layered with aromatic saffron dum rice, served with cucumber raita.',
+    ingredients: ['Fresh Paneer', 'Basmati Rice', 'Cashews', 'Cream', 'Whole Spices', 'Saffron'],
+    allergens: ['Dairy', 'Tree Nuts (Cashew)'],
+    stockAvailable: 18,
+    imageEmoji: '🥘',
+    prepTimeMins: 10,
+    isFeatured: true,
+  },
+  {
+    id: 'food-7',
+    canteenId: 'canteen-central-1',
+    name: 'Steamed Idli (2 Pcs) & Medu Vada (1 Pc)',
+    category: 'Breakfast & South',
+    pricePaise: 3500, // ₹35
+    isVeg: true,
+    description: 'Pillow-soft steamed rice cakes and a crispy lentil doughnut, served with piping hot vegetable sambar & fresh coconut chutney.',
+    ingredients: ['Rice Batter', 'Urad Dal', 'Black Pepper', 'Curry Leaves', 'Coconut', 'Vegetables'],
+    allergens: [],
+    stockAvailable: 40,
+    imageEmoji: '🥯',
+    prepTimeMins: 4,
+  },
+  {
+    id: 'food-8',
+    canteenId: 'canteen-central-1',
+    name: 'Grilled Vegetable & Cheese Sandwich',
+    category: 'Quick Bites',
+    pricePaise: 4200, // ₹42
+    isVeg: true,
+    description: 'Brown bread filled with cucumber, tomatoes, mint chutney, and melting Amul cheese, grilled golden crisp.',
+    ingredients: ['Whole Wheat Brown Bread', 'Cucumber', 'Tomato', 'Processed Cheese', 'Mint Chutney'],
+    allergens: ['Gluten', 'Dairy'],
+    stockAvailable: 22,
+    imageEmoji: '🥪',
+    prepTimeMins: 6,
+  },
+  {
+    id: 'food-9',
+    canteenId: 'canteen-central-1',
+    name: 'Cardamom Cutting Chai Flask',
+    category: 'Beverages & Chai',
+    pricePaise: 1500, // ₹15
+    isVeg: true,
+    description: 'Freshly brewed Assam CTC tea with crushed green cardamom and ginger.',
+    ingredients: ['Assam Tea Leaves', 'Cow Milk', 'Cardamom', 'Ginger', 'Sugar'],
+    allergens: ['Dairy'],
+    stockAvailable: 60,
+    imageEmoji: '☕',
+    prepTimeMins: 2,
+  },
+  {
+    id: 'food-10',
+    canteenId: 'canteen-central-1',
+    name: 'Cold Filter Coffee (300ml)',
+    category: 'Beverages & Chai',
+    pricePaise: 3000, // ₹30
+    isVeg: true,
+    description: 'Chilled South Indian filter coffee decoction blended with thick milk and light brown sugar.',
+    ingredients: ['Coffee Chicory Blend', 'Milk', 'Sugar'],
+    allergens: ['Dairy'],
+    stockAvailable: 35,
+    imageEmoji: '🥤',
+    prepTimeMins: 3,
+  },
+];
+
+export const INITIAL_GROUP_DEALS: GroupDeal[] = [
+  {
+    id: 'deal-biryani-8',
+    title: 'Hostel Night Biryani & Thumbs Up Deal',
+    foodItemId: 'food-6',
+    foodItemName: 'Paneer Makhani Biryani Bowl',
+    regularPricePaise: 8500, // ₹85
+    groupPricePaise: 5500, // ₹55 (Save 35%)
+    currentParticipants: 6,
+    targetParticipants: 8,
+    status: 'ACTIVE',
+    expiresAt: '2026-11-02T21:00:00Z',
+    participantIds: ['usr-1', 'usr-2', 'usr-3', 'usr-4', 'usr-5', 'usr-6'],
+    pickupSlot: '01:30 PM – 01:45 PM',
+    canteenName: 'Central Campus Food Court',
+    imageEmoji: '🥘',
+  },
+  {
+    id: 'deal-breakfast-6',
+    title: 'Morning Study Group Dosa Combo',
+    foodItemId: 'food-2',
+    foodItemName: 'Benne Ghee Masala Dosa + Filter Coffee',
+    regularPricePaise: 7500, // ₹75
+    groupPricePaise: 4500, // ₹45
+    currentParticipants: 5,
+    targetParticipants: 6,
+    status: 'ACTIVE',
+    expiresAt: '2026-11-02T11:00:00Z',
+    participantIds: ['usr-a', 'usr-b', 'usr-c', 'usr-d', 'usr-e'],
+    pickupSlot: '09:00 AM – 09:15 AM',
+    canteenName: 'Central Campus Food Court',
+    imageEmoji: '🥞',
+  },
+];
+
+export const INITIAL_RESCUE_BATCHES: RescueMealBatch[] = [
+  {
+    id: 'rescue-1',
+    foodItemId: 'food-1',
+    foodItemName: 'Student Mini Veg Thali (Lunch Surplus)',
+    originalPricePaise: 5500, // ₹55
+    quantityAvailable: 11,
+    reason: 'Prepared surplus batch for 12:30 PM rush; unreserved portions approved by Head Chef.',
+    preparedAt: '2026-11-02T11:45:00Z',
+    offerStartedAt: '2026-11-02T12:45:00Z',
+    saleCutoff: '2026-11-02T15:30:00Z',
+    handoverCutoff: '2026-11-02T16:15:00Z',
+    handlingInfo: 'Kept in commercial insulated hot-case at 68°C. Inspected by staff at 12:45 PM.',
+    allergens: ['Gluten (Wheat)'],
+    baseDiscountPercent: 15,
+    currentDiscountPercent: 23,
+    currentPricePaise: 4235, // ₹42.35 -> ₹42
+    ngoNotified: false,
+    status: 'AVAILABLE',
+    imageEmoji: '🍱',
+    canteenName: 'Central Campus Food Court',
+  },
+  {
+    id: 'rescue-2',
+    foodItemId: 'food-6',
+    foodItemName: 'Paneer Makhani Biryani Bowl',
+    originalPricePaise: 8500, // ₹85
+    quantityAvailable: 5,
+    reason: 'Cancelled workshop preorder portions; untouched, foil-sealed in hot cabinet.',
+    preparedAt: '2026-11-02T11:30:00Z',
+    offerStartedAt: '2026-11-02T12:30:00Z',
+    saleCutoff: '2026-11-02T15:00:00Z',
+    handoverCutoff: '2026-11-02T15:45:00Z',
+    handlingInfo: 'Individually packed in food-grade foil containers with tamper seal.',
+    allergens: ['Dairy', 'Tree Nuts (Cashew)'],
+    baseDiscountPercent: 23,
+    currentDiscountPercent: 30,
+    currentPricePaise: 5950, // ₹59.50 -> ₹59
+    ngoNotified: true,
+    status: 'AVAILABLE',
+    imageEmoji: '🥘',
+    canteenName: 'Central Campus Food Court',
+  },
+];
+
+export const INITIAL_DONATION_OFFERS: DonationOffer[] = [
+  {
+    id: 'don-offer-1',
+    rescueBatchId: 'rescue-surplus-dal',
+    canteenName: 'Central Campus Food Court',
+    foodItemName: 'Nutritious Dal Khichdi & Sabzi Combo',
+    portions: 16,
+    handlingInfo: 'Hot stainless steel insulated urn at 66°C. Utensils and disposable paper bowls provided.',
+    location: 'Central Canteen Kitchen Dispatch Gate 2',
+    pickupCutoff: '2026-11-02T16:30:00Z',
+    status: 'PENDING_NGO',
+    ngoOrgName: 'Robin Hood Army (Campus Chapter)',
+    imageEmoji: '🍲',
+  },
+];
+
+export const INITIAL_COUPONS: Coupon[] = [
+  {
+    code: 'CAMPUSFIRST',
+    title: '₹20 Flat Off on First Order',
+    description: 'Get ₹20 off on your first campus meal order above ₹50.',
+    flatDiscountPaise: 2000,
+    minOrderPaise: 5000,
+    expiryDate: '2026-12-31',
+  },
+  {
+    code: 'EXAMRUSH',
+    title: '15% Off Mid-term Sustenance',
+    description: '15% off up to ₹30 during study hours on orders above ₹60.',
+    discountPercent: 15,
+    maxDiscountPaise: 3000,
+    minOrderPaise: 6000,
+    expiryDate: '2026-11-15',
+  },
+  {
+    code: 'MEALPASS',
+    title: 'Student Member Special ₹25 Off',
+    description: 'Exclusive benefit for active 30-day membership holders on ₹80+ orders.',
+    flatDiscountPaise: 2500,
+    minOrderPaise: 8000,
+    expiryDate: '2026-12-31',
+    onlyForMembership: true,
+  },
+];
+
+export const CAMPUS_EVENTS: CampusEventOffer[] = [
+  {
+    id: 'ev-1',
+    title: 'TechKriti 2026 Campus Fest Offer',
+    tagline: 'Fuel your hackathon sprints with 20% off all thalis & midnight chai flasks!',
+    bannerColor: 'from-emerald-950 via-slate-900 to-navy-950',
+    dealHighlight: '20% OFF ALL MEALS',
+    dateRange: 'Nov 2 – Nov 6, 2026',
+    code: 'TECHKRITI20',
+  },
+  {
+    id: 'ev-2',
+    title: 'Zero Waste Campus Drive',
+    tagline: 'Every rescue meal collected helps prevent food waste and funds NGO food transfers.',
+    bannerColor: 'from-orange-950 via-slate-900 to-navy-950',
+    dealHighlight: 'UP TO 30% RESCUE SAVINGS',
+    dateRange: 'Active All Week',
+    code: 'ZEROWASTE',
+  },
+];
+
+export const INITIAL_ORDERS: Order[] = [
+  {
+    id: 'ord-seed-1',
+    orderNumber: 'ML-2026-8912',
+    userId: 'usr-student-1',
+    userName: 'Aarav Sharma',
+    userEmail: 'aarav.sharma@campus.edu',
+    canteenId: 'canteen-central-1',
+    canteenName: 'Central Campus Food Court',
+    pickupCounter: 'Counter 2 (Quick Pickup)',
+    items: [
+      {
+        foodItemId: 'food-1',
+        name: 'Student Mini Veg Thali',
+        pricePaise: 5500,
+        quantity: 1,
+        isVeg: true,
+        imageEmoji: '🍱',
+      },
+      {
+        foodItemId: 'food-9',
+        name: 'Cardamom Cutting Chai Flask',
+        pricePaise: 1500,
+        quantity: 1,
+        isVeg: true,
+        imageEmoji: '☕',
+      },
+    ],
+    pickupSlot: '01:15 PM – 01:30 PM',
+    itemTotalPaise: 7000,
+    discountPaise: 1500,
+    couponCode: 'CAMPUSFIRST',
+    appliedCouponDiscountPaise: 1500,
+    membershipDiscountPaise: 0,
+    referralDiscountPaise: 0,
+    taxesPaise: 275, // 5% GST on food
+    payableAmountPaise: 5775, // ₹57.75
+    paymentStatus: 'PAID',
+    razorpayOrderId: 'order_RZP_demo_9921',
+    razorpayPaymentId: 'pay_RZP_demo_verified_1',
+    pickupToken: 'ML-TKN-7821-X4K',
+    pickupQrData: 'MEALLOOP:ML-TKN-7821-X4K:ORD-SEED-1',
+    pickupQrUrl: '',
+    collectionStatus: 'READY_FOR_PICKUP',
+    createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
+    pickupNotes: 'Carry student ID card for quick verification.',
+  },
+  {
+    id: 'ord-seed-2',
+    orderNumber: 'ML-2026-8401',
+    userId: 'usr-student-1',
+    userName: 'Aarav Sharma',
+    userEmail: 'aarav.sharma@campus.edu',
+    canteenId: 'canteen-central-1',
+    canteenName: 'Central Campus Food Court',
+    pickupCounter: 'Counter 1',
+    items: [
+      {
+        foodItemId: 'food-3',
+        name: 'Rajma Chawal Comfort Bowl',
+        pricePaise: 4800,
+        quantity: 1,
+        isVeg: true,
+        imageEmoji: '🍛',
+      },
+    ],
+    pickupSlot: 'Yesterday 12:30 PM',
+    itemTotalPaise: 4800,
+    discountPaise: 480, // Membership 10%
+    appliedCouponDiscountPaise: 0,
+    membershipDiscountPaise: 480,
+    referralDiscountPaise: 0,
+    taxesPaise: 216,
+    payableAmountPaise: 4536,
+    paymentStatus: 'PAID',
+    razorpayOrderId: 'order_RZP_demo_8810',
+    razorpayPaymentId: 'pay_RZP_demo_verified_0',
+    pickupToken: 'ML-TKN-PAST-USED',
+    pickupQrData: 'MEALLOOP:ML-TKN-PAST-USED:ORD-SEED-2',
+    collectionStatus: 'COLLECTED',
+    collectedAt: new Date(Date.now() - 86400000).toISOString(),
+    collectedByStaff: 'Chef Rajesh Kumar',
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+  },
+];
+
+export const INITIAL_PREORDERS: PartyPreorder[] = [
+  {
+    id: 'pre-1',
+    studentId: 'usr-student-1',
+    studentName: 'Aarav Sharma',
+    contactPhone: '+91 98765 43210',
+    eventTitle: 'Hostel 4 Wing Birthday Treat',
+    eventDate: '2026-11-08',
+    pickupTime: '07:30 PM',
+    headCount: 15,
+    itemsRequested: [
+      { name: 'Paneer Makhani Biryani Bowl', quantity: 15 },
+      { name: 'Gulab Jamun Pack (2 Pcs)', quantity: 15 },
+      { name: 'Chilled Cold Coffee', quantity: 15 },
+    ],
+    specialInstructions: 'Please pack in large warming trays with serving spoons and disposable plates.',
+    status: 'QUOTED',
+    quotedPricePaise: 185000, // ₹1,850
+    canteenRemarks: 'Quotation verified. Ready for payment. Pickup from Central Canteen Kitchen counter.',
+    createdAt: '2026-11-01T14:30:00Z',
+  },
+];
+
+export const INITIAL_METRICS: PlatformMetrics = {
+  totalRescueMealsSold: 342,
+  totalDonationsHandedOver: 128,
+  totalRescueRevenuePaise: 1475000, // ₹14,750
+  totalStudentSavingsPaise: 896000, // ₹8,960 saved by students
+  totalDiscardedPortions: 14, // transparently tracked
+  totalGroupDealsCompleted: 49,
+  verifiedPickupsCount: 684,
+};
+
+export const INITIAL_AUDIT_LOGS: AuditLog[] = [
+  {
+    id: 'log-1',
+    timestamp: new Date(Date.now() - 10 * 60000).toISOString(),
+    actorRole: 'CANTEEN_STAFF',
+    actorName: 'Chef Rajesh Kumar',
+    action: 'QR_REDEEM_VERIFIED',
+    details: 'Verified pickup token ML-TKN-PAST-USED for Order ML-2026-8401. Single-use lock engaged.',
+  },
+  {
+    id: 'log-2',
+    timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
+    actorRole: 'CANTEEN_STAFF',
+    actorName: 'Chef Rajesh Kumar',
+    action: 'RESCUE_BATCH_APPROVED',
+    details: 'Approved 11 surplus portions of Mini Veg Thali for progressive rescue discount schedule.',
+  },
+  {
+    id: 'log-3',
+    timestamp: new Date(Date.now() - 2 * 3600000).toISOString(),
+    actorRole: 'ADMIN',
+    actorName: 'Dr. Priya Nair',
+    action: 'COUPON_RULE_UPDATED',
+    details: 'Configured TechKriti 2026 campus festival coupon rules with ₹30 max discount ceiling.',
+  },
+];

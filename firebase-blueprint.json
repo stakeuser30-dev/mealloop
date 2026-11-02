@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Authenticated MealLoop user profile and assigned role",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "photoURL": { "type": "string", "maxLength": 512 },
+        "role": { "type": "string", "enum": ["STUDENT", "CANTEEN_STAFF", "NGO", "ADMIN"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Food order record with payment and pickup verification details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "studentUid": { "type": "string", "maxLength": 128 },
+        "studentEmail": { "type": "string", "maxLength": 256 },
+        "studentName": { "type": "string", "maxLength": 128 },
+        "canteenId": { "type": "string", "maxLength": 64 },
+        "canteenName": { "type": "string", "maxLength": 128 },
+        "totalPaise": { "type": "integer" },
+        "status": { "type": "string", "enum": ["AWAITING_PAYMENT", "CONFIRMED", "PREPARING", "READY_FOR_PICKUP", "COLLECTED", "CANCELLED", "REFUNDED"] },
+        "pickupSlot": { "type": "string", "maxLength": 64 },
+        "pickupToken": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "studentUid", "totalPaise", "status"]
+    },
+    "FoodItem": {
+      "title": "FoodItem",
+      "description": "Canteen food menu item and inventory state",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 64 },
+        "pricePaise": { "type": "integer" },
+        "stockAvailable": { "type": "integer" },
+        "canteenId": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "name", "pricePaise", "stockAvailable"]
+    },
+    "RescueBatch": {
+      "title": "RescueBatch",
+      "description": "Progressive rescue surplus meal batch",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "foodItemId": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 128 },
+        "quantityAvailable": { "type": "integer" },
+        "currentDiscountPercent": { "type": "integer" },
+        "pickupDeadline": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "quantityAvailable"]
+    },
+    "GroupDeal": {
+      "title": "GroupDeal",
+      "description": "8-student group meal unlocking deal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 128 },
+        "targetParticipants": { "type": "integer" },
+        "currentParticipants": { "type": "integer" },
+        "status": { "type": "string", "enum": ["ACTIVE", "UNLOCKED", "EXPIRED"] }
+      },
+      "required": ["id", "title", "targetParticipants", "currentParticipants", "status"]
+    },
+    "DonationOffer": {
+      "title": "DonationOffer",
+      "description": "Surplus rescue food batch offered to partner NGOs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "mealTitle": { "type": "string", "maxLength": 128 },
+        "portions": { "type": "integer" },
+        "status": { "type": "string", "enum": ["PENDING", "ACCEPTED", "COLLECTED", "EXPIRED"] }
+      },
+      "required": ["id", "mealTitle", "portions", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Individual user document indexed by Firebase Auth UID"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Orders placed by students"
+    },
+    "/foodItems/{foodItemId}": {
+      "schema": "FoodItem",
+      "description": "Menu inventory items"
+    },
+    "/rescueBatches/{batchId}": {
+      "schema": "RescueBatch",
+      "description": "Active surplus rescue batches"
+    },
+    "/groupDeals/{dealId}": {
+      "schema": "GroupDeal",
+      "description": "Active campus group deals"
+    },
+    "/donations/{donationId}": {
+      "schema": "DonationOffer",
+      "description": "Donation records for NGO partners"
+    }
+  }
+}

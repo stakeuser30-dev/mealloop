@@ -1,0 +1,145 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default-Deny Catch-All)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitives & Hardened Helpers
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email != null && request.auth.token.email.matches('.*@(campus\\.edu|admin\\.mealloop\\.internal)$'))
+      );
+    }
+
+    function isStaff() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/staff/$(request.auth.uid)) ||
+        isAdmin()
+      );
+    }
+
+    function isNGO() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/ngos/$(request.auth.uid)) ||
+        isAdmin()
+      );
+    }
+
+    // Validation Blueprint for User profile
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid.size() <= 128 && data.uid == request.auth.uid &&
+        data.email is string && data.email.size() <= 256 &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128)) &&
+        (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512));
+    }
+
+    // Users Collection (Split/Isolated access)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      
+      // On create, user can initialize their profile with default 'STUDENT' role only
+      allow create: if isValidId(userId) && isOwner(userId) &&
+        isValidUser(incoming()) &&
+        (!('role' in incoming()) || incoming().role == 'STUDENT');
+
+      // On update, users CANNOT escalate their own role
+      allow update: if isValidId(userId) && isOwner(userId) &&
+        isValidUser(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().role == existing().role &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt']);
+
+      allow delete: if isAdmin();
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      // Students can only get and list their own orders. Staff and Admin can view all.
+      allow get: if isValidId(orderId) && isSignedIn() && (
+        resource.data.studentUid == request.auth.uid ||
+        isStaff() ||
+        isAdmin()
+      );
+      
+      allow list: if isSignedIn() && (
+        resource.data.studentUid == request.auth.uid ||
+        isStaff() ||
+        isAdmin()
+      );
+
+      // Writes are strictly authoritative via backend server (Firebase Admin SDK).
+      // Direct client creation/update is blocked to prevent payment spoofing and counterfeit QR codes.
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Food Items / Menu Inventory
+    match /foodItems/{foodItemId} {
+      // Anyone can browse canteen food items
+      allow read: if true;
+      allow write: if isStaff() || isAdmin();
+    }
+
+    // Rescue Meal Batches
+    match /rescueBatches/{batchId} {
+      allow read: if true;
+      allow write: if isStaff() || isAdmin();
+    }
+
+    // Group Deals
+    match /groupDeals/{dealId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // NGO Donation Offers
+    match /donations/{donationId} {
+      allow read: if isSignedIn() && (isNGO() || isStaff() || isAdmin());
+      allow write: if isSignedIn() && (isNGO() || isStaff() || isAdmin());
+    }
+
+    // System Admins marker collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Only manageable via server / GCP console
+    }
+
+    // Staff marker collection
+    match /staff/{staffId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // NGO marker collection
+    match /ngos/{ngoId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}
